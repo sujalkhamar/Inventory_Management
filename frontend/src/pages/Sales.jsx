@@ -54,9 +54,6 @@ const Sales = () => {
         }
     };
 
-        }
-    };
-
     const downloadInvoice = (sale) => {
         const doc = new jsPDF();
         
