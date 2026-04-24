@@ -15,7 +15,9 @@ const Sales = () => {
 
     const [formData, setFormData] = useState({
         product: '',
-        quantity: 1
+        quantity: 1,
+        tax: 0,
+        discount: 0
     });
 
     useEffect(() => {
@@ -46,7 +48,7 @@ const Sales = () => {
         try {
             await axios.post('/sales', formData);
             toast.success('Sale recorded successfully!');
-            setFormData({ product: '', quantity: 1 });
+            setFormData({ product: '', quantity: 1, tax: 0, discount: 0 });
             fetchData();
         } catch (error) {
             console.error(error);
@@ -142,6 +144,16 @@ const Sales = () => {
                                 className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" 
                             />
                         </div>
+                        <div className="grid grid-cols-2 gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tax (%)</label>
+                                <input type="number" name="tax" min="0" max="100" step="0.5" value={formData.tax} onChange={handleInputChange} className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Discount (%)</label>
+                                <input type="number" name="discount" min="0" max="100" step="0.5" value={formData.discount} onChange={handleInputChange} className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2 px-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm" />
+                            </div>
+                        </div>
                         <button 
                             type="submit" 
                             className="w-full flex justify-center py-2 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
@@ -166,6 +178,7 @@ const Sales = () => {
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Quantity</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Total Price</th>
                                     <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Sold By</th>
+                                    <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Invoice</th>
                                 </tr>
                             </thead>
                             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -190,6 +203,11 @@ const Sales = () => {
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                                                 {sale.soldBy?.name || 'Unknown'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                                <button onClick={() => downloadInvoice(sale)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 flex items-center justify-end w-full">
+                                                    <FileDown className="w-4 h-4 mr-1" /> Invoice
+                                                </button>
                                             </td>
                                         </tr>
                                     ))

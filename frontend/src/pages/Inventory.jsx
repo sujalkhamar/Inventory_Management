@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Search, Plus, Edit2, Trash2, AlertCircle, FileDown, ChevronLeft, ChevronRight, History, Clock, QrCode } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, AlertCircle, FileDown, ChevronLeft, ChevronRight, History, Clock, QrCode, Upload, BarChart3 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
@@ -21,6 +21,7 @@ const Inventory = () => {
     const [timelineLoading, setTimelineLoading] = useState(false);
     const { user } = useContext(AuthContext);
     const location = useLocation();
+    const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
     const initialFilter = queryParams.get('filter') || '';
 
@@ -141,12 +142,34 @@ const Inventory = () => {
         toast.success('Exporting CSV...');
     };
 
+    const handleImportCSV = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formDataUpload = new FormData();
+        formDataUpload.append('file', file);
+        try {
+            const res = await axios.post('/products/import', formDataUpload, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            toast.success(`Imported ${res.data.count} products!`);
+            fetchProducts();
+        } catch (err) {
+            toast.error('Error importing CSV');
+        }
+        e.target.value = '';
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Inventory Management</h1>
                 {user?.role === 'admin' && (
                     <div className="flex gap-2">
+                        <label className="flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors cursor-pointer">
+                            <Upload className="w-4 h-4 mr-2" />
+                            Import CSV
+                            <input type="file" accept=".csv" className="hidden" onChange={handleImportCSV} />
+                        </label>
                         <button 
                             onClick={handleExportCSV}
                             className="flex items-center px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
@@ -234,6 +257,9 @@ const Inventory = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             {user?.role === 'admin' && (
                                                 <>
+                                                    <button onClick={() => navigate(`/products/${product._id}/analytics`)} className="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-300 mr-4" title="View Analytics">
+                                                        <BarChart3 className="w-4 h-4" />
+                                                    </button>
                                                     <button onClick={() => handleTimelineClick(product)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mr-4" title="View Timeline">
                                                         <History className="w-4 h-4" />
                                                     </button>

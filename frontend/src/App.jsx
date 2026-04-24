@@ -11,6 +11,9 @@ import Sales from './pages/Sales';
 import Profile from './pages/Profile';
 import Employees from './pages/Employees';
 import Suppliers from './pages/Suppliers';
+import Warehouses from './pages/Warehouses';
+import PurchaseOrders from './pages/PurchaseOrders';
+import ProductAnalytics from './pages/ProductAnalytics';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -58,6 +61,9 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/employees" element={<ProtectedRoute><Layout><Employees /></Layout></ProtectedRoute>} />
         <Route path="/suppliers" element={<ProtectedRoute><Layout><Suppliers /></Layout></ProtectedRoute>} />
+        <Route path="/warehouses" element={<ProtectedRoute><Layout><Warehouses /></Layout></ProtectedRoute>} />
+        <Route path="/purchase-orders" element={<ProtectedRoute><Layout><PurchaseOrders /></Layout></ProtectedRoute>} />
+        <Route path="/products/:id/analytics" element={<ProtectedRoute><Layout><ProductAnalytics /></Layout></ProtectedRoute>} />
       </Routes>
     </Router>
   );

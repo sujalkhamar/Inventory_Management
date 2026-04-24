@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Package, ShoppingCart, LogOut, X, User, Users, Truck } from 'lucide-react';
+import { LayoutDashboard, Package, ShoppingCart, LogOut, X, User, Users, Truck, Warehouse, ClipboardList } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
@@ -58,6 +58,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <NavLink to="/sales" className={({ isActive }) => `flex items-center px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'}`}>
                   <ShoppingCart className="w-5 h-5 mr-3" />
                   <span className="font-medium">Sales</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/warehouses" className={({ isActive }) => `flex items-center px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'}`}>
+                  <Warehouse className="w-5 h-5 mr-3" />
+                  <span className="font-medium">Warehouses</span>
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/purchase-orders" className={({ isActive }) => `flex items-center px-4 py-3 rounded-lg transition-colors ${isActive ? 'bg-indigo-50 text-indigo-600 dark:bg-indigo-500/10 dark:text-indigo-400' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'}`}>
+                  <ClipboardList className="w-5 h-5 mr-3" />
+                  <span className="font-medium">Purchase Orders</span>
                 </NavLink>
               </li>
               {user?.role === 'admin' && (
