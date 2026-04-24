@@ -11,7 +11,12 @@ const ActivitySchema = new mongoose.Schema({
         required: true
     },
     details: {
-        type: String
+        type: String,
+        default: ''
+    },
+    referenceId: {
+        type: String,
+        default: null
     },
     createdAt: {
         type: Date,

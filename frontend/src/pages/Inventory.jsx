@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { Search, Plus, Edit2, Trash2, AlertCircle, FileDown, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, AlertCircle, FileDown, ChevronLeft, ChevronRight, History, Clock, QrCode } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
 import { AuthContext } from '../context/AuthContext';
@@ -15,6 +16,9 @@ const Inventory = () => {
     const [pagination, setPagination] = useState({});
     const [showModal, setShowModal] = useState(false);
     const [currentProduct, setCurrentProduct] = useState(null);
+    const [showTimeline, setShowTimeline] = useState(false);
+    const [productActivities, setProductActivities] = useState([]);
+    const [timelineLoading, setTimelineLoading] = useState(false);
     const { user } = useContext(AuthContext);
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -104,6 +108,20 @@ const Inventory = () => {
                 console.error(error);
                 toast.error("Error deleting product. Admin rights required.");
             }
+        }
+    };
+
+    const handleTimelineClick = async (product) => {
+        setCurrentProduct(product);
+        setTimelineLoading(true);
+        setShowTimeline(true);
+        try {
+            const res = await axios.get(`/activities/ref/${product._id}`);
+            setProductActivities(res.data.data);
+        } catch (error) {
+            toast.error("Error fetching timeline");
+        } finally {
+            setTimelineLoading(false);
         }
     };
 
@@ -216,6 +234,9 @@ const Inventory = () => {
                                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                             {user?.role === 'admin' && (
                                                 <>
+                                                    <button onClick={() => handleTimelineClick(product)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 mr-4" title="View Timeline">
+                                                        <History className="w-4 h-4" />
+                                                    </button>
                                                     <button onClick={() => openModal(product)} className="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4">
                                                         <Edit2 className="w-4 h-4" />
                                                     </button>
@@ -316,6 +337,61 @@ const Inventory = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Timeline Modal */}
+            {showTimeline && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl max-w-lg w-full p-6 shadow-2xl">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center">
+                                <History className="w-5 h-5 mr-2 text-indigo-500" />
+                                Product Info & Timeline
+                            </h2>
+                            <button onClick={() => setShowTimeline(false)} className="text-gray-400 hover:text-gray-600">✕</button>
+                        </div>
+                        
+                        <div className="flex flex-col sm:flex-row gap-6 mb-6 pb-6 border-b border-gray-100 dark:border-gray-700">
+                            <div className="flex-shrink-0 bg-white p-2 rounded-lg border border-gray-100">
+                                <QRCodeCanvas value={currentProduct?._id || ''} size={100} />
+                                <p className="text-[10px] text-center text-gray-400 mt-1 font-mono uppercase">{currentProduct?._id.slice(-6)}</p>
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-gray-900 dark:text-white">{currentProduct?.name}</h3>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{currentProduct?.category} • {currentProduct?.location}</p>
+                                <p className="text-sm font-semibold text-indigo-600 dark:text-indigo-400 mt-1">Stock: {currentProduct?.stock}</p>
+                            </div>
+                        </div>
+
+                        <h4 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 uppercase tracking-wider">Activity Log</h4>
+                        <div className="max-h-[300px] overflow-y-auto pr-2 space-y-4">
+                            {timelineLoading ? (
+                                <p className="text-center py-4">Loading timeline...</p>
+                            ) : productActivities.length === 0 ? (
+                                <p className="text-center py-4 text-gray-500">No history found for this product.</p>
+                            ) : (
+                                productActivities.map((act, i) => (
+                                    <div key={act._id} className="relative pl-6 pb-4 border-l-2 border-gray-100 dark:border-gray-700 last:pb-0">
+                                        <div className="absolute -left-[9px] top-0 w-4 h-4 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center">
+                                            <div className="w-2 h-2 rounded-full bg-indigo-600"></div>
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-semibold text-gray-900 dark:text-white">{act.action}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {act.user?.name} • {new Date(act.createdAt).toLocaleString()}
+                                            </p>
+                                            <p className="text-xs text-gray-400 mt-1 italic">{act.details}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                        
+                        <div className="mt-6 flex justify-end">
+                            <button onClick={() => setShowTimeline(false)} className="px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-white rounded-lg">Close</button>
                         </div>
                     </div>
                 </div>

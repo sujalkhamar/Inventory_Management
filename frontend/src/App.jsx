@@ -10,6 +10,7 @@ import Inventory from './pages/Inventory';
 import Sales from './pages/Sales';
 import Profile from './pages/Profile';
 import Employees from './pages/Employees';
+import Suppliers from './pages/Suppliers';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -56,6 +57,7 @@ function App() {
         <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
         <Route path="/employees" element={<ProtectedRoute><Layout><Employees /></Layout></ProtectedRoute>} />
+        <Route path="/suppliers" element={<ProtectedRoute><Layout><Suppliers /></Layout></ProtectedRoute>} />
       </Routes>
     </Router>
   );

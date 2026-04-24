@@ -1,7 +1,22 @@
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { Menu, Moon, Sun } from 'lucide-react';
 
-const Header = ({ sidebarOpen, setSidebarOpen, darkMode, setDarkMode }) => {
+const Header = ({ sidebarOpen, setSidebarOpen }) => {
+  const [darkMode, setDarkMode] = useState(
+    localStorage.getItem('theme') === 'dark' || 
+    (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  );
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
+
   return (
     <header className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 z-30 transition-colors duration-200">
       <div className="px-4 sm:px-6 lg:px-8">

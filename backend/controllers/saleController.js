@@ -72,7 +72,7 @@ exports.createSale = asyncHandler(async (req, res, next) => {
         }
     }
 
-    await logActivity(req.user.id, 'Sale Recorded', `Sold ${quantity}x ${product.name}`);
+    await logActivity(req.user.id, 'Sale Recorded', `Sold ${quantity}x ${product.name}`, product._id);
 
     res.status(201).json({
         success: true,

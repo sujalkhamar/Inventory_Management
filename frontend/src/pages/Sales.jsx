@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useContext } from 'react';
 import axios from 'axios';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, FileDown, Eye } from 'lucide-react';
+import { jsPDF } from 'jspdf';
+import 'jspdf-autotable';
 import { toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 
@@ -50,6 +52,55 @@ const Sales = () => {
             console.error(error);
             toast.error(error.response?.data?.error || "Error recording sale");
         }
+    };
+
+        }
+    };
+
+    const downloadInvoice = (sale) => {
+        const doc = new jsPDF();
+        
+        // Header
+        doc.setFontSize(20);
+        doc.text('INVENTORY SYSTEM', 105, 15, { align: 'center' });
+        doc.setFontSize(10);
+        doc.text('Sales Invoice', 105, 22, { align: 'center' });
+        
+        // Info
+        doc.setFontSize(12);
+        doc.text(`Invoice ID: ${sale._id}`, 20, 40);
+        doc.text(`Date: ${new Date(sale.createdAt).toLocaleDateString()}`, 20, 47);
+        doc.text(`Customer: Cash Customer`, 20, 54);
+
+        // Table
+        const tableColumn = ["Product", "Quantity", "Unit Price", "Total"];
+        const tableRows = [
+            [
+                sale.product?.name || 'Product',
+                sale.quantity,
+                `$${(sale.totalPrice / sale.quantity).toFixed(2)}`,
+                `$${sale.totalPrice.toFixed(2)}`
+            ]
+        ];
+
+        doc.autoTable({
+            startY: 65,
+            head: [tableColumn],
+            body: tableRows,
+            theme: 'striped',
+            headStyles: { fillColor: [79, 70, 229] }
+        });
+
+        // Footer
+        const finalY = doc.lastAutoTable.finalY + 10;
+        doc.setFontSize(14);
+        doc.text(`Total Amount: $${sale.totalPrice.toFixed(2)}`, 140, finalY);
+        
+        doc.setFontSize(10);
+        doc.text('Thank you for your business!', 105, finalY + 30, { align: 'center' });
+
+        doc.save(`invoice_${sale._id}.pdf`);
+        toast.success('Invoice downloaded');
     };
 
     return (

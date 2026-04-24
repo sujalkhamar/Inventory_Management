@@ -69,7 +69,7 @@ exports.getProduct = asyncHandler(async (req, res, next) => {
 exports.createProduct = asyncHandler(async (req, res, next) => {
     const product = await Product.create(req.body);
 
-    await logActivity(req.user.id, 'Product Created', `Added ${product.name} to inventory`);
+    await logActivity(req.user.id, 'Product Created', `Added ${product.name} to inventory`, product._id);
 
     res.status(201).json({
         success: true,
@@ -92,7 +92,7 @@ exports.updateProduct = asyncHandler(async (req, res, next) => {
         runValidators: true
     });
 
-    await logActivity(req.user.id, 'Product Updated', `Updated details for ${product.name}`);
+    await logActivity(req.user.id, 'Product Updated', `Updated details for ${product.name}`, product._id);
 
     res.status(200).json({
         success: true,
