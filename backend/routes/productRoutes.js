@@ -4,12 +4,17 @@ const {
     getProduct,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    importProducts
 } = require('../controllers/productController');
 
 const { protect, authorize } = require('../middleware/authMiddleware');
+const multer = require('multer');
+const upload = multer({ dest: 'uploads/temp/' });
 
 const router = express.Router();
+
+router.post('/import', protect, authorize('admin'), upload.single('file'), importProducts);
 
 router
     .route('/')

@@ -1,3 +1,5 @@
+const fs = require('fs');
+const csv = require('csv-parser');
 const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const Product = require('../models/Product');
@@ -118,4 +120,45 @@ exports.deleteProduct = asyncHandler(async (req, res, next) => {
         success: true,
         data: {}
     });
+});
+
+// @desc    Import products from CSV
+// @route   POST /api/products/import
+// @access  Private/Admin
+exports.importProducts = asyncHandler(async (req, res, next) => {
+    if (!req.file) {
+        return next(new ErrorResponse('Please upload a CSV file', 400));
+    }
+
+    const products = [];
+    fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on('data', (row) => {
+            products.push({
+                name: row.name,
+                category: row.category,
+                stock: parseInt(row.stock) || 0,
+                price: parseFloat(row.price) || 0,
+                costPrice: parseFloat(row.costPrice) || 0,
+                supplier: row.supplier,
+                location: row.location || 'Imported'
+            });
+        })
+        .on('end', async () => {
+            try {
+                if (products.length > 0) {
+                    await Product.insertMany(products);
+                }
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+                res.status(201).json({ success: true, count: products.length, data: products });
+            } catch (err) {
+                console.error(err);
+                if (fs.existsSync(req.file.path)) {
+                    fs.unlinkSync(req.file.path);
+                }
+                res.status(500).json({ success: false, error: 'Error importing products' });
+            }
+        });
 });

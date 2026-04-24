@@ -15,6 +15,14 @@ const SaleSchema = new mongoose.Schema({
         type: Number,
         required: [true, 'Please add total price']
     },
+    tax: {
+        type: Number,
+        default: 0
+    },
+    discount: {
+        type: Number,
+        default: 0
+    },
     profit: {
         type: Number,
         required: true

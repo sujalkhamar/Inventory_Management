@@ -41,15 +41,24 @@ exports.createSale = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse(`Not enough stock. Available: ${product.stock}`, 400));
     }
 
-    // Calculate total price
-    const totalPrice = product.price * quantity;
-    const profit = (product.price - product.costPrice) * quantity;
+    // Calculate tax and discount
+    const taxRate = req.body.tax || 0; // percentage
+    const discountRate = req.body.discount || 0; // percentage
+    
+    const subtotal = product.price * quantity;
+    const discountAmount = subtotal * (discountRate / 100);
+    const taxAmount = (subtotal - discountAmount) * (taxRate / 100);
+    const totalPrice = subtotal - discountAmount + taxAmount;
+    
+    const profit = (totalPrice - taxAmount) - (product.costPrice * quantity);
 
     // Create sale record
     const sale = await Sale.create({
         product: productId,
         quantity,
         totalPrice,
+        tax: taxAmount,
+        discount: discountAmount,
         profit,
         soldBy: req.user.id
     });

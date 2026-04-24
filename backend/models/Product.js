@@ -28,6 +28,10 @@ const ProductSchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please add a supplier']
     },
+    warehouse: {
+        type: mongoose.Schema.ObjectId,
+        ref: 'Warehouse'
+    },
     imageUrl: {
         type: String,
         default: 'https://via.placeholder.com/150'
@@ -39,10 +43,6 @@ const ProductSchema = new mongoose.Schema({
     lowStockThreshold: {
         type: Number,
         default: 10
-    },
-    imageUrl: {
-        type: String,
-        default: 'no-photo.jpg'
     },
     createdAt: {
         type: Date,
