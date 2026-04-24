@@ -120,6 +120,10 @@ const Dashboard = () => {
                                         <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.8}/>
                                         <stop offset="95%" stopColor="#4f46e5" stopOpacity={0}/>
                                     </linearGradient>
+                                    <linearGradient id="colorProfit" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                    </linearGradient>
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" opacity={0.1} vertical={false} />
                                 <XAxis dataKey="_id" stroke="#9ca3af" fontSize={12} tickLine={false} axisLine={false} />
@@ -128,7 +132,8 @@ const Dashboard = () => {
                                     contentStyle={{ backgroundColor: '#1f2937', borderColor: '#374151', color: '#f3f4f6' }}
                                     itemStyle={{ color: '#818cf8' }}
                                 />
-                                <Area type="monotone" dataKey="dailyRevenue" stroke="#4f46e5" fillOpacity={1} fill="url(#colorRevenue)" />
+                                <Area type="monotone" dataKey="dailyRevenue" stroke="#4f46e5" fillOpacity={1} fill="url(#colorRevenue)" name="Revenue" />
+                                <Area type="monotone" dataKey="dailyProfit" stroke="#10b981" fillOpacity={1} fill="url(#colorProfit)" name="Net Profit" />
                             </AreaChart>
                         </ResponsiveContainer>
                     </div>

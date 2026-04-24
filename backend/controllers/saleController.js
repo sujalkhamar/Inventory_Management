@@ -137,7 +137,8 @@ exports.getAnalytics = asyncHandler(async (req, res, next) => {
         {
             $group: {
                 _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
-                dailyRevenue: { $sum: "$totalPrice" }
+                dailyRevenue: { $sum: "$totalPrice" },
+                dailyProfit: { $sum: "$profit" }
             }
         },
         { $sort: { _id: 1 } },
