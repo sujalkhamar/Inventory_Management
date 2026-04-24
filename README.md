@@ -331,3 +331,21 @@ Inventory_Management/
 *Built with ❤️ using the MERN Stack*
 
 </div>
+
+
+
+## 🚀 Upcoming Enhancement: Data Science Integration
+
+This project is being actively upgraded to incorporate advanced **data science and machine learning capabilities** for smarter inventory management.
+
+### 🔮 Planned Features
+- **Demand Forecasting:** Predict future product demand using historical sales data  
+- **Smart Stock Alerts:** Identify and notify potential stock shortages before they occur  
+- **Intelligent Restocking:** Recommend optimal stock quantities based on trends and usage patterns  
+- **Analytics Dashboard:** Visualize sales performance, trends, and key business insights  
+- **Recommendation System:** Suggest high-demand and frequently purchased products  
+
+### 🧠 Goal
+The objective of this upgrade is to transform the system from a standard inventory management application into an **intelligent, data-driven decision-making platform**.
+
+Stay tuned for upcoming updates!
