@@ -31,12 +31,16 @@ const Profile = () => {
         const load = async () => {
             setLoading(true);
             try {
+                const spikeFactorPref = typeof prefs.spikeFactor === 'number' && Number.isFinite(prefs.spikeFactor) && prefs.spikeFactor >= 1
+                    ? prefs.spikeFactor
+                    : 2.5;
+
                 const [summaryRes, activitiesRes, trendRes, intelRes, anomRes] = await Promise.all([
                     axios.get(`/analytics/users/me/summary?days=${rangeDays}`),
                     axios.get('/activities/me?limit=15'),
                     axios.get(`/analytics/users/me/activity-trend?days=${rangeDays}`),
                     axios.get('/intelligence/overview?days=30').catch(() => ({ data: { data: null } })),
-                    axios.get('/analytics/products/anomalies?spikeDays=7&baselineDays=28&spikeFactor=2.5&adjustAbs=50').catch(() => ({ data: { data: null } }))
+                    axios.get(`/analytics/products/anomalies?spikeDays=7&baselineDays=28&spikeFactor=${spikeFactorPref}&adjustAbs=50`).catch(() => ({ data: { data: null } }))
                 ]);
                 setSummary(summaryRes.data.data);
                 setActivities(activitiesRes.data.data || []);
@@ -61,12 +65,16 @@ const Profile = () => {
     const refresh = async () => {
         setLoading(true);
         try {
+            const spikeFactorPref = typeof prefs.spikeFactor === 'number' && Number.isFinite(prefs.spikeFactor) && prefs.spikeFactor >= 1
+                ? prefs.spikeFactor
+                : 2.5;
+
             const [summaryRes, activitiesRes, trendRes, intelRes, anomRes] = await Promise.all([
                 axios.get(`/analytics/users/me/summary?days=${rangeDays}`),
                 axios.get('/activities/me?limit=15'),
                 axios.get(`/analytics/users/me/activity-trend?days=${rangeDays}`),
                 axios.get('/intelligence/overview?days=30').catch(() => ({ data: { data: null } })),
-                axios.get('/analytics/products/anomalies?spikeDays=7&baselineDays=28&spikeFactor=2.5&adjustAbs=50').catch(() => ({ data: { data: null } }))
+                axios.get(`/analytics/products/anomalies?spikeDays=7&baselineDays=28&spikeFactor=${spikeFactorPref}&adjustAbs=50`).catch(() => ({ data: { data: null } }))
             ]);
             setSummary(summaryRes.data.data);
             setActivities(activitiesRes.data.data || []);

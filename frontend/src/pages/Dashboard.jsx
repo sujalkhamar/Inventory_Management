@@ -64,7 +64,17 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchAnoms = async () => {
             try {
-                const data = await fetchProductAnomalies({ spikeDays: 7, baselineDays: 28, spikeFactor: 2.5, adjustAbs: 50 });
+                let spikeFactor = 2.5;
+                try {
+                    const prefs = JSON.parse(localStorage.getItem('profile_prefs') || '{}');
+                    if (typeof prefs.spikeFactor === 'number' && Number.isFinite(prefs.spikeFactor) && prefs.spikeFactor >= 1) {
+                        spikeFactor = prefs.spikeFactor;
+                    }
+                } catch {
+                    // ignore
+                }
+
+                const data = await fetchProductAnomalies({ spikeDays: 7, baselineDays: 28, spikeFactor, adjustAbs: 50 });
                 setAnomalies(data);
             } catch (error) {
                 console.error('Error fetching anomalies', error);
