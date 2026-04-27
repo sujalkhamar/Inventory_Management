@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Skeleton from '../components/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { DollarSign, ShoppingBag, AlertTriangle, Activity as ActivityIcon, Clock, CreditCard, Sparkles, Package } from 'lucide-react';
+import { DollarSign, ShoppingBag, AlertTriangle, Activity as ActivityIcon, Clock, CreditCard, Sparkles, Package, TrendingUp } from 'lucide-react';
 import { fetchIntelligenceOverview } from '../api/intelligence';
 
 const Dashboard = () => {

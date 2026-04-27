@@ -14,6 +14,7 @@ import Suppliers from './pages/Suppliers';
 import Warehouses from './pages/Warehouses';
 import PurchaseOrders from './pages/PurchaseOrders';
 import ProductAnalytics from './pages/ProductAnalytics';
+import ErrorBoundary from './components/ErrorBoundary';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useContext(AuthContext);
@@ -55,15 +56,15 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<ProtectedRoute><Layout><Dashboard /></Layout></ProtectedRoute>} />
-        <Route path="/inventory" element={<ProtectedRoute><Layout><Inventory /></Layout></ProtectedRoute>} />
-        <Route path="/sales" element={<ProtectedRoute><Layout><Sales /></Layout></ProtectedRoute>} />
-        <Route path="/profile" element={<ProtectedRoute><Layout><Profile /></Layout></ProtectedRoute>} />
-        <Route path="/employees" element={<ProtectedRoute><Layout><Employees /></Layout></ProtectedRoute>} />
-        <Route path="/suppliers" element={<ProtectedRoute><Layout><Suppliers /></Layout></ProtectedRoute>} />
-        <Route path="/warehouses" element={<ProtectedRoute><Layout><Warehouses /></Layout></ProtectedRoute>} />
-        <Route path="/purchase-orders" element={<ProtectedRoute><Layout><PurchaseOrders /></Layout></ProtectedRoute>} />
-        <Route path="/products/:id/analytics" element={<ProtectedRoute><Layout><ProductAnalytics /></Layout></ProtectedRoute>} />
+        <Route path="/" element={<ProtectedRoute><Layout><ErrorBoundary><Dashboard /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/inventory" element={<ProtectedRoute><Layout><ErrorBoundary><Inventory /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/sales" element={<ProtectedRoute><Layout><ErrorBoundary><Sales /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/profile" element={<ProtectedRoute><Layout><ErrorBoundary><Profile /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/employees" element={<ProtectedRoute><Layout><ErrorBoundary><Employees /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/suppliers" element={<ProtectedRoute><Layout><ErrorBoundary><Suppliers /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/warehouses" element={<ProtectedRoute><Layout><ErrorBoundary><Warehouses /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/purchase-orders" element={<ProtectedRoute><Layout><ErrorBoundary><PurchaseOrders /></ErrorBoundary></Layout></ProtectedRoute>} />
+        <Route path="/products/:id/analytics" element={<ProtectedRoute><Layout><ErrorBoundary><ProductAnalytics /></ErrorBoundary></Layout></ProtectedRoute>} />
       </Routes>
     </Router>
   );
