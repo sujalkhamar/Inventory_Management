@@ -5,6 +5,23 @@ export const fetchSupplierLeadTimes = async (days = 180) => {
   return res.data.data;
 };
 
+export const fetchProductSegmentation = async ({ days = 90, weeks = 12 } = {}) => {
+  const res = await axios.get(`/analytics/products/segmentation?days=${days}&weeks=${weeks}`);
+  return res.data.data;
+};
+
+export const fetchProductAnomalies = async ({
+  spikeDays = 7,
+  baselineDays = 28,
+  spikeFactor = 2.5,
+  adjustAbs = 50
+} = {}) => {
+  const res = await axios.get(
+    `/analytics/products/anomalies?spikeDays=${spikeDays}&baselineDays=${baselineDays}&spikeFactor=${spikeFactor}&adjustAbs=${adjustAbs}`
+  );
+  return res.data.data;
+};
+
 export const fetchMovements = async ({
   productId,
   warehouseId,
@@ -22,4 +39,3 @@ export const fetchMovements = async ({
   const res = await axios.get(`/movements?${params.toString()}`);
   return res.data;
 };
-

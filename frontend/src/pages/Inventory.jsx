@@ -7,11 +7,16 @@ import { toast } from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
 import { AuthContext } from '../context/AuthContext';
 import { fetchIntelligenceOverview } from '../api/intelligence';
+import { fetchProductSegmentation } from '../api/analytics';
 
 const Inventory = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [intelById, setIntelById] = useState({});
+    const [segById, setSegById] = useState({});
+    const [segLoading, setSegLoading] = useState(true);
+    const [segFilter, setSegFilter] = useState('ALL'); // ALL | A | B | C
+    const [varFilter, setVarFilter] = useState('ALL'); // ALL | X | Y | Z | N
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -52,6 +57,27 @@ const Inventory = () => {
         fetchIntel();
     }, []);
 
+    useEffect(() => {
+        const fetchSeg = async () => {
+            setSegLoading(true);
+            try {
+                const data = await fetchProductSegmentation({ days: 90, weeks: 12 });
+                const map = (data.products || []).reduce((acc, item) => {
+                    acc[item.productId] = item.segmentation;
+                    return acc;
+                }, {});
+                setSegById(map);
+            } catch (error) {
+                console.error('Error fetching product segmentation', error);
+                setSegById({});
+            } finally {
+                setSegLoading(false);
+            }
+        };
+
+        fetchSeg();
+    }, []);
+
     const fetchProducts = async () => {
         setLoading(true);
         try {
@@ -75,6 +101,37 @@ const Inventory = () => {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const segmentedProducts = filteredProducts.filter((p) => {
+        const seg = segById[p._id];
+        if (!seg) {
+            return segFilter === 'ALL' && varFilter === 'ALL';
+        }
+        const passABC = segFilter === 'ALL' ? true : seg.abc === segFilter;
+        const passXYZ = varFilter === 'ALL' ? true : seg.xyz === varFilter;
+        return passABC && passXYZ;
+    });
+
+    const getSegBadge = (product) => {
+        const seg = segById[product._id];
+        if (!seg) return null;
+
+        const label = `${seg.abc}${seg.xyz}`;
+        const styles = {
+            A: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40',
+            B: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300 border border-sky-100 dark:border-sky-900/40',
+            C: 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border border-gray-100 dark:border-gray-700'
+        };
+
+        return (
+            <span
+                className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${styles[seg.abc] || styles.C}`}
+                title={`ABC/XYZ: ${label} (Revenue share: ${seg.revenueShare}%)`}
+            >
+                {label}
+            </span>
+        );
+    };
 
     const getIntelBadge = (product) => {
         const intel = intelById[product._id];
@@ -262,6 +319,45 @@ const Inventory = () => {
                     </div>
                 </div>
 
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="text-sm text-gray-600 dark:text-gray-300">
+                        ABC/XYZ segmentation
+                        {segLoading && <span className="ml-2 text-xs text-gray-400">Loading…</span>}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                        <select
+                            value={segFilter}
+                            onChange={(e) => setSegFilter(e.target.value)}
+                            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100"
+                            title="ABC class"
+                        >
+                            <option value="ALL">ABC: All</option>
+                            <option value="A">ABC: A</option>
+                            <option value="B">ABC: B</option>
+                            <option value="C">ABC: C</option>
+                        </select>
+                        <select
+                            value={varFilter}
+                            onChange={(e) => setVarFilter(e.target.value)}
+                            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100"
+                            title="XYZ class"
+                        >
+                            <option value="ALL">XYZ: All</option>
+                            <option value="X">XYZ: X (stable)</option>
+                            <option value="Y">XYZ: Y (medium)</option>
+                            <option value="Z">XYZ: Z (volatile)</option>
+                            <option value="N">XYZ: N (no data)</option>
+                        </select>
+                        <button
+                            type="button"
+                            onClick={() => { setSegFilter('ALL'); setVarFilter('ALL'); }}
+                            className="px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/20 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700/40 transition-colors"
+                        >
+                            Reset
+                        </button>
+                    </div>
+                </div>
+
                 <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead className="bg-gray-50 dark:bg-gray-900/50">
@@ -284,10 +380,10 @@ const Inventory = () => {
                                         <td className="px-6 py-4"><Skeleton className="h-4 w-1/4" /></td>
                                     </tr>
                                 ))
-                            ) : filteredProducts.length === 0 ? (
+                            ) : segmentedProducts.length === 0 ? (
                                 <tr><td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">No products found</td></tr>
                             ) : (
-                                filteredProducts.map(product => (
+                                segmentedProducts.map(product => (
                                     <tr key={product._id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
@@ -303,6 +399,7 @@ const Inventory = () => {
                                                         <AlertCircle className="w-3 h-3 mr-1" /> Low Stock
                                                     </span>
                                                 )}
+                                                {getSegBadge(product)}
                                                 {getIntelBadge(product)}
                                             </div>
                                         </td>

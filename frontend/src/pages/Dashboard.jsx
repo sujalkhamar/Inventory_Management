@@ -5,15 +5,17 @@ import Skeleton from '../components/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { DollarSign, ShoppingBag, AlertTriangle, Activity as ActivityIcon, Clock, CreditCard, Sparkles, Package, TrendingUp } from 'lucide-react';
 import { fetchIntelligenceOverview } from '../api/intelligence';
-import { fetchSupplierLeadTimes } from '../api/analytics';
+import { fetchSupplierLeadTimes, fetchProductAnomalies } from '../api/analytics';
 
 const Dashboard = () => {
     const [analytics, setAnalytics] = useState(null);
     const [intelligence, setIntelligence] = useState(null);
     const [leadTimes, setLeadTimes] = useState(null);
+    const [anomalies, setAnomalies] = useState(null);
     const [loading, setLoading] = useState(true);
     const [intelLoading, setIntelLoading] = useState(true);
     const [leadLoading, setLeadLoading] = useState(true);
+    const [anomalyLoading, setAnomalyLoading] = useState(true);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -57,6 +59,21 @@ const Dashboard = () => {
         };
 
         fetchLeads();
+    }, []);
+
+    useEffect(() => {
+        const fetchAnoms = async () => {
+            try {
+                const data = await fetchProductAnomalies({ spikeDays: 7, baselineDays: 28, spikeFactor: 2.5, adjustAbs: 50 });
+                setAnomalies(data);
+            } catch (error) {
+                console.error('Error fetching anomalies', error);
+            } finally {
+                setAnomalyLoading(false);
+            }
+        };
+
+        fetchAnoms();
     }, []);
 
     if (loading) {
@@ -369,6 +386,69 @@ const Dashboard = () => {
                             </p>
                         )}
                     </div>
+                )}
+            </div>
+
+            {/* Anomalies */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <AlertTriangle className="w-5 h-5 mr-2 text-amber-500" />
+                    Demand & Stock Anomalies
+                </h2>
+
+                {anomalyLoading ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+                    </div>
+                ) : !anomalies ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Couldn’t load anomaly signals.</p>
+                ) : anomalies.count === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No anomalies detected in the last {anomalies.spikeDays} days.</p>
+                ) : (
+                    <>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                            Spike window: {anomalies.spikeDays}d • Baseline: {anomalies.baselineDays}d • Spike factor: {anomalies.spikeFactor}
+                        </p>
+                        <div className="space-y-2">
+                            {anomalies.anomalies.slice(0, 6).map((a) => (
+                                <div key={a.productId} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                    <div className="min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{a.name}</p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Stock: {a.stock} • Spike/day: {a.demand.spikePerDay} • Baseline/day: {a.demand.baselinePerDay}
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        {a.flags.stockout && (
+                                            <span className="text-[11px] px-2 py-1 rounded-md bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 border border-red-100 dark:border-red-900/40">
+                                                stockout
+                                            </span>
+                                        )}
+                                        {a.flags.lowStock && (
+                                            <span className="text-[11px] px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40">
+                                                low stock
+                                            </span>
+                                        )}
+                                        {a.flags.demandSpike && (
+                                            <span className="text-[11px] px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/20 text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40">
+                                                spike x{a.demand.spikeFactor ?? '-'}
+                                            </span>
+                                        )}
+                                        {a.flags.largeManualAdjustments && (
+                                            <span className="text-[11px] px-2 py-1 rounded-md bg-gray-50 dark:bg-gray-900/20 text-gray-700 dark:text-gray-300 border border-gray-100 dark:border-gray-700">
+                                                adjustments
+                                            </span>
+                                        )}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        {anomalies.count > 6 && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                                Showing 6 of {anomalies.count}.
+                            </p>
+                        )}
+                    </>
                 )}
             </div>
         </div>
