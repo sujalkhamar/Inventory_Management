@@ -5,12 +5,15 @@ import Skeleton from '../components/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
 import { DollarSign, ShoppingBag, AlertTriangle, Activity as ActivityIcon, Clock, CreditCard, Sparkles, Package, TrendingUp } from 'lucide-react';
 import { fetchIntelligenceOverview } from '../api/intelligence';
+import { fetchSupplierLeadTimes } from '../api/analytics';
 
 const Dashboard = () => {
     const [analytics, setAnalytics] = useState(null);
     const [intelligence, setIntelligence] = useState(null);
+    const [leadTimes, setLeadTimes] = useState(null);
     const [loading, setLoading] = useState(true);
     const [intelLoading, setIntelLoading] = useState(true);
+    const [leadLoading, setLeadLoading] = useState(true);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -39,6 +42,21 @@ const Dashboard = () => {
         };
 
         fetchIntel();
+    }, []);
+
+    useEffect(() => {
+        const fetchLeads = async () => {
+            try {
+                const data = await fetchSupplierLeadTimes(180);
+                setLeadTimes(data);
+            } catch (error) {
+                console.error('Error fetching supplier lead times', error);
+            } finally {
+                setLeadLoading(false);
+            }
+        };
+
+        fetchLeads();
     }, []);
 
     if (loading) {
@@ -299,6 +317,58 @@ const Dashboard = () => {
                             )}
                         </div>
                     </>
+                )}
+            </div>
+
+            {/* Supplier Lead Times */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <TrendingUp className="w-5 h-5 mr-2 text-emerald-500" />
+                    Supplier Lead Times (Received POs)
+                </h2>
+
+                {leadLoading ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+                    </div>
+                ) : !leadTimes ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Couldn’t load supplier lead times yet.</p>
+                ) : leadTimes.suppliers.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                        No received purchase orders found in the last {leadTimes.daysBack} days.
+                    </p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                                    <th className="py-2 pr-4">Supplier</th>
+                                    <th className="py-2 pr-4">POs</th>
+                                    <th className="py-2 pr-4">Avg Days</th>
+                                    <th className="py-2 pr-4">Min Days</th>
+                                    <th className="py-2 pr-4">Max Days</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {leadTimes.suppliers.slice(0, 8).map((s) => (
+                                    <tr key={s.supplierId} className="text-sm text-gray-900 dark:text-gray-100">
+                                        <td className="py-2 pr-4 whitespace-nowrap">
+                                            {s.supplierName || 'Unknown Supplier'}
+                                        </td>
+                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-300">{s.count}</td>
+                                        <td className="py-2 pr-4 font-semibold">{s.avgLeadTimeDays}</td>
+                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-300">{s.minLeadTimeDays}</td>
+                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-300">{s.maxLeadTimeDays}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                        {leadTimes.suppliers.length > 8 && (
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+                                Showing top 8 suppliers by fastest average lead time.
+                            </p>
+                        )}
+                    </div>
                 )}
             </div>
         </div>

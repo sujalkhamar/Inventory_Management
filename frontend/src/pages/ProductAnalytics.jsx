@@ -5,6 +5,7 @@ import { ArrowLeft, TrendingUp, Package, DollarSign, ShoppingBag } from 'lucide-
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import Skeleton from '../components/Skeleton';
 import { fetchProductInsights } from '../api/intelligence';
+import { fetchMovements } from '../api/analytics';
 
 const ProductAnalytics = () => {
     const { id } = useParams();
@@ -13,9 +14,28 @@ const ProductAnalytics = () => {
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalSold: 0, totalRevenue: 0, totalProfit: 0, avgPerDay: 0 });
     const [intel, setIntel] = useState(null);
+    const [movements, setMovements] = useState([]);
+    const [movementsLoading, setMovementsLoading] = useState(true);
 
     useEffect(() => {
         fetchProductData();
+    }, [id]);
+
+    useEffect(() => {
+        const loadMovements = async () => {
+            setMovementsLoading(true);
+            try {
+                const res = await fetchMovements({ productId: id, page: 1, limit: 25 });
+                setMovements(res.data || []);
+            } catch (err) {
+                console.error(err);
+                setMovements([]);
+            } finally {
+                setMovementsLoading(false);
+            }
+        };
+
+        loadMovements();
     }, [id]);
 
     const fetchProductData = async () => {
@@ -88,6 +108,16 @@ const ProductAnalytics = () => {
 
     if (!product) return <p className="text-center py-10 text-gray-500">Product not found.</p>;
 
+    const movementBadge = (reason) => {
+        const map = {
+            sale: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40',
+            purchase_order_received: 'bg-emerald-50 text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40',
+            manual_adjustment: 'bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40',
+            import: 'bg-sky-50 text-sky-700 dark:bg-sky-900/20 dark:text-sky-300 border border-sky-100 dark:border-sky-900/40'
+        };
+        return map[reason] || 'bg-gray-50 text-gray-700 dark:bg-gray-900/20 dark:text-gray-300 border border-gray-100 dark:border-gray-700';
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center space-x-4">
@@ -146,6 +176,55 @@ const ProductAnalytics = () => {
                     </div>
                 </div>
             )}
+
+            {/* Stock Movements */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Stock Movements</h3>
+                {movementsLoading ? (
+                    <div className="space-y-3">
+                        {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-10" />)}
+                    </div>
+                ) : movements.length === 0 ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No movement history yet for this product.</p>
+                ) : (
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full">
+                            <thead>
+                                <tr className="text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
+                                    <th className="py-2 pr-4">When</th>
+                                    <th className="py-2 pr-4">Reason</th>
+                                    <th className="py-2 pr-4">Delta</th>
+                                    <th className="py-2 pr-4">Warehouse</th>
+                                    <th className="py-2 pr-4">Note</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                                {movements.map((m) => (
+                                    <tr key={m._id} className="text-sm text-gray-900 dark:text-gray-100">
+                                        <td className="py-2 pr-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                                            {new Date(m.createdAt).toLocaleString()}
+                                        </td>
+                                        <td className="py-2 pr-4 whitespace-nowrap">
+                                            <span className={`text-[11px] px-2 py-1 rounded-md ${movementBadge(m.reason)}`}>
+                                                {m.reason}
+                                            </span>
+                                        </td>
+                                        <td className={`py-2 pr-4 font-semibold whitespace-nowrap ${m.quantityDelta < 0 ? 'text-red-600 dark:text-red-400' : 'text-emerald-700 dark:text-emerald-300'}`}>
+                                            {m.quantityDelta}
+                                        </td>
+                                        <td className="py-2 pr-4 whitespace-nowrap text-gray-600 dark:text-gray-300">
+                                            {m.warehouse?.name || '-'}
+                                        </td>
+                                        <td className="py-2 pr-4 text-gray-600 dark:text-gray-300">
+                                            {m.note || '-'}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                )}
+            </div>
 
             {/* Sales Volume Chart */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
