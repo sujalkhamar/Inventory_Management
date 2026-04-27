@@ -1,5 +1,5 @@
 import React, { useContext } from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink } from 'react-router-dom';
 import { LayoutDashboard, Package, ShoppingCart, LogOut, X, User, Users, Truck, Warehouse, ClipboardList } from 'lucide-react';
 import { AuthContext } from '../context/AuthContext';
 
@@ -19,12 +19,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         
         {/* Sidebar header */}
         <div className="flex justify-between items-center pr-3 sm:px-6 py-5 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center space-x-2">
+          <Link to="/" onClick={() => setSidebarOpen(false)} className="flex items-center space-x-2">
             <div className="bg-indigo-600 p-1.5 rounded-lg">
-                <Package className="w-6 h-6 text-white" />
+              <Package className="w-6 h-6 text-white" />
             </div>
             <span className="text-xl font-bold text-gray-900 dark:text-white">InventFlow</span>
-          </div>
+          </Link>
           {/* Close button */}
           <button className="lg:hidden text-gray-500 hover:text-gray-400" onClick={() => setSidebarOpen(false)}>
             <span className="sr-only">Close sidebar</span>
