@@ -2,6 +2,7 @@ const ErrorResponse = require('../utils/errorResponse');
 const asyncHandler = require('../middleware/async');
 const PurchaseOrder = require('../models/PurchaseOrder');
 const Product = require('../models/Product');
+const InventoryMovement = require('../models/InventoryMovement');
 const logActivity = require('../utils/logger');
 
 // @desc    Get all purchase orders
@@ -51,14 +52,48 @@ exports.updatePOStatus = asyncHandler(async (req, res, next) => {
 
     const newStatus = req.body.status;
 
+    // Track lifecycle timestamps for lead-time analytics
+    if (newStatus === 'Shipped' && order.status !== 'Shipped' && !order.shippedAt) {
+        order.shippedAt = new Date();
+    }
+    if (newStatus === 'Received' && order.status !== 'Received' && !order.receivedAt) {
+        order.receivedAt = new Date();
+    }
+    if (newStatus === 'Cancelled' && order.status !== 'Cancelled' && !order.cancelledAt) {
+        order.cancelledAt = new Date();
+    }
+
     // If marking as "Received", automatically add stock to products
     if (newStatus === 'Received' && order.status !== 'Received') {
         for (const item of order.items) {
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: item.quantity }
-            });
+            const updatedProduct = await Product.findByIdAndUpdate(
+                item.product,
+                { $inc: { stock: item.quantity } },
+                { new: true }
+            );
+
+            // Record inventory movement (ledger)
+            try {
+                await InventoryMovement.create({
+                    product: item.product,
+                    warehouse: order.warehouse || updatedProduct?.warehouse || null,
+                    quantityDelta: Math.abs(item.quantity || 0),
+                    reason: 'purchase_order_received',
+                    sourceRef: order._id,
+                    sourceModel: 'PurchaseOrder',
+                    note: `Received ${item.quantity} unit(s) from PO ${order.orderId}`,
+                    createdBy: req.user?.id || null
+                });
+            } catch (err) {
+                console.error('Error creating inventory movement for PO receive:', err);
+            }
         }
-        await logActivity(req.user.id, 'Stock Received', `PO ${order.orderId} received — stock updated for ${order.items.length} products`);
+
+        await logActivity(
+            req.user.id,
+            'Stock Received',
+            `PO ${order.orderId} received - stock updated for ${order.items.length} products`
+        );
     }
 
     order.status = newStatus;

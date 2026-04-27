@@ -5,6 +5,7 @@ const Product = require('../models/Product');
 const Activity = require('../models/Activity');
 const logActivity = require('../utils/logger');
 const sendEmail = require('../utils/sendEmail');
+const InventoryMovement = require('../models/InventoryMovement');
 
 // @desc    Get all sales
 // @route   GET /api/sales
@@ -66,6 +67,22 @@ exports.createSale = asyncHandler(async (req, res, next) => {
     // Deduct stock
     product.stock -= quantity;
     await product.save();
+
+    // Record inventory movement (ledger)
+    try {
+        await InventoryMovement.create({
+            product: productId,
+            warehouse: product.warehouse || null,
+            quantityDelta: -Math.abs(quantity),
+            reason: 'sale',
+            sourceRef: sale._id,
+            sourceModel: 'Sale',
+            note: `Sold ${quantity} unit(s) via sales entry`,
+            createdBy: req.user?.id || null
+        });
+    } catch (err) {
+        console.error('Error creating inventory movement for sale:', err);
+    }
 
     // Check for low stock alert
     if (product.stock <= product.lowStockThreshold) {

@@ -25,6 +25,18 @@ const PurchaseOrderSchema = new mongoose.Schema({
         enum: ['Pending', 'Shipped', 'Received', 'Cancelled'],
         default: 'Pending'
     },
+    shippedAt: {
+        type: Date,
+        default: null
+    },
+    receivedAt: {
+        type: Date,
+        default: null
+    },
+    cancelledAt: {
+        type: Date,
+        default: null
+    },
     warehouse: {
         type: mongoose.Schema.ObjectId,
         ref: 'Warehouse'
