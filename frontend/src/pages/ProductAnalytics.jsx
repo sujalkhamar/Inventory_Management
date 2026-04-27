@@ -4,6 +4,7 @@ import axios from 'axios';
 import { ArrowLeft, TrendingUp, Package, DollarSign, ShoppingBag } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import Skeleton from '../components/Skeleton';
+import { fetchProductInsights } from '../api/intelligence';
 
 const ProductAnalytics = () => {
     const { id } = useParams();
@@ -11,6 +12,7 @@ const ProductAnalytics = () => {
     const [salesData, setSalesData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [stats, setStats] = useState({ totalSold: 0, totalRevenue: 0, totalProfit: 0, avgPerDay: 0 });
+    const [intel, setIntel] = useState(null);
 
     useEffect(() => {
         fetchProductData();
@@ -19,13 +21,15 @@ const ProductAnalytics = () => {
     const fetchProductData = async () => {
         setLoading(true);
         try {
-            const [productRes, salesRes] = await Promise.all([
+            const [productRes, salesRes, intelRes] = await Promise.all([
                 axios.get(`/products/${id}`),
-                axios.get('/sales')
+                axios.get('/sales'),
+                fetchProductInsights(id, 30).catch(() => null)
             ]);
 
             const prod = productRes.data.data;
             setProduct(prod);
+            setIntel(intelRes || null);
 
             // Filter sales for this product and compute analytics
             const productSales = salesRes.data.data.filter(s => s.product?._id === id);
@@ -119,6 +123,29 @@ const ProductAnalytics = () => {
                     <p className={`text-2xl font-bold mt-1 ${stats.daysUntilOut <= 7 ? 'text-red-600' : 'text-gray-900 dark:text-white'}`}>{stats.daysUntilOut} days</p>
                 </div>
             </div>
+
+            {intel && (
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">Predictive Insights (Beta)</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Alert Level</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">{intel.alert?.level || 'healthy'}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{intel.alert?.message}</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Avg Daily Demand</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">{intel.forecast?.averageDailyDemand ?? 0}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Lookback: {intel.forecast?.lookbackDays} days</p>
+                        </div>
+                        <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900/20 border border-gray-100 dark:border-gray-700">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Recommended Reorder</p>
+                            <p className="text-xl font-bold text-gray-900 dark:text-white mt-1">{intel.restock?.recommendedQuantity ?? 0}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Incoming: {intel.restock?.incomingStock ?? 0}</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Sales Volume Chart */}
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700">

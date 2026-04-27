@@ -6,10 +6,12 @@ import { QRCodeCanvas } from 'qrcode.react';
 import { toast } from 'react-hot-toast';
 import Skeleton from '../components/Skeleton';
 import { AuthContext } from '../context/AuthContext';
+import { fetchIntelligenceOverview } from '../api/intelligence';
 
 const Inventory = () => {
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [intelById, setIntelById] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
@@ -32,6 +34,23 @@ const Inventory = () => {
     useEffect(() => {
         fetchProducts();
     }, [currentPage, searchTerm, location.search]);
+
+    useEffect(() => {
+        const fetchIntel = async () => {
+            try {
+                const data = await fetchIntelligenceOverview(30);
+                const map = (data.products || []).reduce((acc, item) => {
+                    acc[item.productId] = item;
+                    return acc;
+                }, {});
+                setIntelById(map);
+            } catch (error) {
+                console.error('Error fetching intelligence overview', error);
+            }
+        };
+
+        fetchIntel();
+    }, []);
 
     const fetchProducts = async () => {
         setLoading(true);
@@ -56,6 +75,45 @@ const Inventory = () => {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         product.category.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
+    const getIntelBadge = (product) => {
+        const intel = intelById[product._id];
+        if (!intel) return null;
+
+        const level = intel.alert?.level;
+        const shouldReorder = intel.restock?.shouldReorder;
+        const reorderQty = intel.restock?.recommendedQuantity;
+
+        const levelStyles = {
+            critical: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+            warning: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
+            watch: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300'
+        };
+
+        if (shouldReorder && reorderQty > 0) {
+            return (
+                <span
+                    className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400"
+                    title={intel.alert?.message || 'Reorder suggested'}
+                >
+                    Reorder {reorderQty}
+                </span>
+            );
+        }
+
+        if (level && level !== 'healthy') {
+            return (
+                <span
+                    className={`ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${levelStyles[level] || 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}`}
+                    title={intel.alert?.message || 'Stock risk detected'}
+                >
+                    {level}
+                </span>
+            );
+        }
+
+        return null;
+    };
 
     const handleInputChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -245,6 +303,7 @@ const Inventory = () => {
                                                         <AlertCircle className="w-3 h-3 mr-1" /> Low Stock
                                                     </span>
                                                 )}
+                                                {getIntelBadge(product)}
                                             </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{product.category}</td>

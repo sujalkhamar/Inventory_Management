@@ -3,11 +3,14 @@ import { Link } from 'react-router-dom';
 import axios from 'axios';
 import Skeleton from '../components/Skeleton';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
-import { DollarSign, ShoppingBag, AlertTriangle, TrendingUp, Activity as ActivityIcon, Clock, CreditCard } from 'lucide-react';
+import { DollarSign, ShoppingBag, AlertTriangle, Activity as ActivityIcon, Clock, CreditCard, Sparkles, Package } from 'lucide-react';
+import { fetchIntelligenceOverview } from '../api/intelligence';
 
 const Dashboard = () => {
     const [analytics, setAnalytics] = useState(null);
+    const [intelligence, setIntelligence] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [intelLoading, setIntelLoading] = useState(true);
 
     useEffect(() => {
         const fetchAnalytics = async () => {
@@ -21,6 +24,21 @@ const Dashboard = () => {
             }
         };
         fetchAnalytics();
+    }, []);
+
+    useEffect(() => {
+        const fetchIntel = async () => {
+            try {
+                const data = await fetchIntelligenceOverview(30);
+                setIntelligence(data);
+            } catch (error) {
+                console.error('Error fetching intelligence', error);
+            } finally {
+                setIntelLoading(false);
+            }
+        };
+
+        fetchIntel();
     }, []);
 
     if (loading) {
@@ -191,6 +209,97 @@ const Dashboard = () => {
                         </ResponsiveContainer>
                     </div>
                 </div>
+            </div>
+
+            {/* Predictive Intelligence */}
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+                    <Sparkles className="w-5 h-5 mr-2 text-indigo-500" />
+                    Predictive Inventory Insights (Beta)
+                </h2>
+
+                {intelLoading ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[1, 2, 3].map((i) => <Skeleton key={i} className="h-24" />)}
+                    </div>
+                ) : !intelligence ? (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Couldn’t load intelligence insights.</p>
+                ) : (
+                    <>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <Link to="/inventory?filter=lowstock" className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-sm transition-shadow bg-gray-50 dark:bg-gray-900/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Critical Alerts</p>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{intelligence.summary.criticalAlerts}</p>
+                                    </div>
+                                    <div className="p-2 rounded-lg bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400">
+                                        <AlertTriangle className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            </Link>
+
+                            <Link to="/inventory" className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-sm transition-shadow bg-gray-50 dark:bg-gray-900/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Watch + Warning</p>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                                            {intelligence.summary.watchAlerts + intelligence.summary.warningAlerts}
+                                        </p>
+                                    </div>
+                                    <div className="p-2 rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400">
+                                        <AlertTriangle className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            </Link>
+
+                            <Link to="/purchase-orders" className="p-4 rounded-xl border border-gray-100 dark:border-gray-700 hover:shadow-sm transition-shadow bg-gray-50 dark:bg-gray-900/20">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reorder Candidates</p>
+                                        <p className="text-2xl font-bold text-gray-900 dark:text-white mt-1">{intelligence.summary.reorderCandidates}</p>
+                                    </div>
+                                    <div className="p-2 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
+                                        <Package className="w-5 h-5" />
+                                    </div>
+                                </div>
+                            </Link>
+                        </div>
+
+                        <div className="mt-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Top Reorder Suggestions</h3>
+                                <Link to="/inventory" className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline">View inventory</Link>
+                            </div>
+                            {intelligence.reorderRecommendations.length === 0 ? (
+                                <p className="text-sm text-gray-500 dark:text-gray-400">No reorder recommendations right now.</p>
+                            ) : (
+                                <div className="space-y-2">
+                                    {intelligence.reorderRecommendations.slice(0, 5).map((rec) => (
+                                        <div key={rec.productId} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                            <div className="min-w-0">
+                                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{rec.name}</p>
+                                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                    Stock: {rec.stock} • Incoming: {rec.restock.incomingStock} • Avg/day: {rec.forecast.averageDailyDemand}
+                                                </p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-xs px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
+                                                    Reorder {rec.restock.recommendedQuantity}
+                                                </span>
+                                                {rec.alert.level !== 'healthy' && (
+                                                    <span className="text-[11px] px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40">
+                                                        {rec.alert.level}
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
             </div>
         </div>
     );
