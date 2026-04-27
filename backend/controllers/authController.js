@@ -45,6 +45,10 @@ exports.login = asyncHandler(async (req, res, next) => {
         return next(new ErrorResponse('Invalid credentials', 401));
     }
 
+    // Login audit
+    user.lastLoginAt = new Date();
+    await user.save({ validateBeforeSave: false });
+
     sendTokenResponse(user, 200, res);
 });
 
