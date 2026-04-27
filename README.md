@@ -312,6 +312,38 @@ Inventory_Management/
 - [ ] Employee performance leaderboard
 - [ ] Multi-currency support
 - [ ] Automated monthly PDF report generation
+- [ ] Data science and machine learning upgrade for predictive inventory intelligence
+
+### Planned Data Science Integration
+
+The next major evolution of **InventFlow** is an intelligence layer that turns historical inventory and sales activity into forward-looking operational decisions. This upgrade is designed to move the platform beyond reporting and into prediction, recommendation, and proactive planning.
+
+#### Target Capabilities
+
+- **Demand Forecasting** — Predict future product demand from historical sales patterns, seasonality, and warehouse activity
+- **Smart Stock Alerts** — Detect likely stockout risks before thresholds are crossed
+- **Intelligent Restocking** — Recommend reorder quantities using consumption velocity, supplier lead time, and safety stock rules
+- **Analytics Dashboard Upgrade** — Expose trend projections, forecast accuracy, and actionable business insights in the UI
+- **Recommendation System** — Highlight high-demand and frequently co-purchased products for purchasing and sales teams
+
+#### Why This Matters
+
+- Improve inventory planning accuracy
+- Reduce emergency stockouts and overstocking
+- Support faster purchasing decisions with data-backed recommendations
+- Give managers a clearer view of future sales and replenishment risk
+
+#### Implementation Direction
+
+This enhancement will be introduced incrementally so the existing MERN application remains stable while intelligence features are added in phases:
+
+1. **Data Foundation** — Expand product, sales, supplier, and purchase-order data quality for model-ready time series inputs
+2. **Prediction Services** — Add backend forecasting and replenishment services that operate on historical transaction data
+3. **Operational Alerts** — Surface stock-risk signals and recommended actions through API endpoints and dashboard widgets
+4. **Decision Support UI** — Add forecast charts, replenishment recommendations, and recommendation panels to the frontend
+5. **Model Monitoring** — Track forecast accuracy and retraining cadence as live business data evolves
+
+For the detailed rollout plan, see [DATA_SCIENCE_ROADMAP.md](./DATA_SCIENCE_ROADMAP.md).
 
 ---
 

@@ -25,6 +25,7 @@ const supplierRoutes = require('./routes/supplierRoutes');
 const warehouseRoutes = require('./routes/warehouseRoutes');
 const purchaseOrderRoutes = require('./routes/purchaseOrderRoutes');
 const activityRoutes = require('./routes/activityRoutes');
+const intelligenceRoutes = require('./routes/intelligenceRoutes');
 
 // Mount routers
 app.use('/api/auth', authRoutes);
@@ -35,6 +36,7 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/warehouses', warehouseRoutes);
 app.use('/api/purchase-orders', purchaseOrderRoutes);
 app.use('/api/activities', activityRoutes);
+app.use('/api/intelligence', intelligenceRoutes);
 
 const PORT = process.env.PORT || 5000;
 

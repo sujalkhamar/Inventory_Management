@@ -25,7 +25,7 @@ MongoDB Atlas hosts your database in the cloud. It's free, requires no local ins
 
 ### Step 3: Set Up Network Access (IP Whitelist)
 1. On the left sidebar, go to **Network Access**.
-2. Click **Add IP Address**.
+2. Click **Add IP Address**.m
 3. Click **Allow Access from Anywhere** (this adds `0.0.0.0/0`).
 4. Click **Confirm**.
 
