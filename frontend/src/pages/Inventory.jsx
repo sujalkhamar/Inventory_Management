@@ -38,7 +38,7 @@ const Inventory = () => {
 
     useEffect(() => {
         fetchProducts();
-    }, [currentPage, searchTerm, location.search]);
+    }, [currentPage, searchTerm, location.search, segFilter, varFilter]);
 
     useEffect(() => {
         const fetchIntel = async () => {
@@ -82,10 +82,18 @@ const Inventory = () => {
         setLoading(true);
         try {
             const filter = queryParams.get('filter') || '';
-            const res = await axios.get(`/products?page=${currentPage}&limit=8&search=${searchTerm}&filter=${filter}`);
+            const segmentationActive = segFilter !== 'ALL' || varFilter !== 'ALL';
+            const page = segmentationActive ? 1 : currentPage;
+            const limit = segmentationActive ? 1000 : 8;
+
+            const res = await axios.get(`/products?page=${page}&limit=${limit}&search=${searchTerm}&filter=${filter}`);
             setProducts(res.data.data);
             setPagination(res.data.pagination);
             setTotalPages(Math.ceil(res.data.total / 8));
+
+            if (segmentationActive && currentPage !== 1) {
+                setCurrentPage(1);
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -111,6 +119,8 @@ const Inventory = () => {
         const passXYZ = varFilter === 'ALL' ? true : seg.xyz === varFilter;
         return passABC && passXYZ;
     });
+
+    const segmentationActive = segFilter !== 'ALL' || varFilter !== 'ALL';
 
     const getSegBadge = (product) => {
         const seg = segById[product._id];
@@ -323,6 +333,9 @@ const Inventory = () => {
                     <div className="text-sm text-gray-600 dark:text-gray-300">
                         ABC/XYZ segmentation
                         {segLoading && <span className="ml-2 text-xs text-gray-400">Loading…</span>}
+                        {segmentationActive && !segLoading && (
+                            <span className="ml-2 text-xs text-gray-400">(Filtering full inventory)</span>
+                        )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                         <select
