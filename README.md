@@ -1,13 +1,15 @@
 <div align="center">
 
-# 🏭 InventFlow — Enterprise Inventory Management System
-
-### A full-stack, production-grade inventory & supply chain management platform built with the MERN stack.
+# 🤖 AI-Powered Inventory Management System
+ 
+ ### A full-stack, AI-integrated inventory & supply chain management platform built with MERN + Python (FastAPI).
 
 [![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Express](https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 [![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactjs.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
 <br/>
@@ -119,7 +121,8 @@
 | **QR Codes** | qrcode.react | Product identification system |
 | **PDF** | jsPDF + jspdf-autotable | Invoice generation |
 | **Notifications** | react-hot-toast | Real-time UI feedback |
-| **Backend** | Node.js, Express.js | RESTful API server |
+| **Backend (Core)** | Node.js, Express.js | RESTful API server |
+| **Backend (AI)** | Python, FastAPI, Scikit-Learn | Demand prediction engine |
 | **Database** | MongoDB, Mongoose | Document-based data storage |
 | **Auth** | JWT, bcrypt | Secure authentication & hashing |
 | **Email** | Nodemailer | Automated low-stock alerts |
@@ -304,55 +307,6 @@ Inventory_Management/
 
 ---
 
-## 📈 Future Roadmap
-
-- [ ] Cloud storage integration (AWS S3) for product images
-- [ ] Progressive Web App (PWA) for offline mobile access
-- [ ] Barcode scanner integration via device camera
-- [ ] Employee performance leaderboard
-- [ ] Multi-currency support
-- [ ] Automated monthly PDF report generation
-- [ ] Data science and machine learning upgrade for predictive inventory intelligence
-
-### Planned Data Science Integration
-
-The next major evolution of **InventFlow** is an intelligence layer that turns historical inventory and sales activity into forward-looking operational decisions. This upgrade is designed to move the platform beyond reporting and into prediction, recommendation, and proactive planning.
-
-#### Target Capabilities
-
-- **Demand Forecasting** — Predict future product demand from historical sales patterns, seasonality, and warehouse activity
-- **Smart Stock Alerts** — Detect likely stockout risks before thresholds are crossed
-- **Intelligent Restocking** — Recommend reorder quantities using consumption velocity, supplier lead time, and safety stock rules
-- **Analytics Dashboard Upgrade** — Expose trend projections, forecast accuracy, and actionable business insights in the UI
-- **Recommendation System** — Highlight high-demand and frequently co-purchased products for purchasing and sales teams
-
-#### Why This Matters
-
-- Improve inventory planning accuracy
-- Reduce emergency stockouts and overstocking
-- Support faster purchasing decisions with data-backed recommendations
-- Give managers a clearer view of future sales and replenishment risk
-
-#### Implementation Direction
-
-This enhancement will be introduced incrementally so the existing MERN application remains stable while intelligence features are added in phases:
-
-1. **Data Foundation** — Expand product, sales, supplier, and purchase-order data quality for model-ready time series inputs
-2. **Prediction Services** — Add backend forecasting and replenishment services that operate on historical transaction data
-3. **Operational Alerts** — Surface stock-risk signals and recommended actions through API endpoints and dashboard widgets
-4. **Decision Support UI** — Add forecast charts, replenishment recommendations, and recommendation panels to the frontend
-5. **Model Monitoring** — Track forecast accuracy and retraining cadence as live business data evolves
-
-For the detailed rollout plan, see [DATA_SCIENCE_ROADMAP.md](./DATA_SCIENCE_ROADMAP.md).
-
----
-
-## 👨‍💻 Author
-
-**Sujal Khamar**
-
-[![GitHub](https://img.shields.io/badge/GitHub-100000?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sujalkhamar)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white)](https://linkedin.com/in/sujalkhamar)
 
 ---
 
@@ -360,24 +314,6 @@ For the detailed rollout plan, see [DATA_SCIENCE_ROADMAP.md](./DATA_SCIENCE_ROAD
 
 ### ⭐ If you found this project impressive, please consider giving it a star!
 
-*Built with ❤️ using the MERN Stack*
+*Built with ❤️ using MERN + AI*
 
 </div>
-
-
-
-## 🚀 Upcoming Enhancement: Data Science Integration
-
-This project is being actively upgraded to incorporate advanced **data science and machine learning capabilities** for smarter inventory management.
-
-### 🔮 Planned Features
-- **Demand Forecasting:** Predict future product demand using historical sales data  
-- **Smart Stock Alerts:** Identify and notify potential stock shortages before they occur  
-- **Intelligent Restocking:** Recommend optimal stock quantities based on trends and usage patterns  
-- **Analytics Dashboard:** Visualize sales performance, trends, and key business insights  
-- **Recommendation System:** Suggest high-demand and frequently purchased products  
-
-### 🧠 Goal
-The objective of this upgrade is to transform the system from a standard inventory management application into an **intelligent, data-driven decision-making platform**.
-
-Stay tuned for upcoming updates!

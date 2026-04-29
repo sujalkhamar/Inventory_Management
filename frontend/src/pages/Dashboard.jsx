@@ -260,7 +260,8 @@ const Dashboard = () => {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                     <Sparkles className="w-5 h-5 mr-2 text-indigo-500" />
-                    Predictive Inventory Insights (Beta)
+                    AI-Powered Demand Prediction
+                    <span className="ml-2 px-2 py-0.5 text-[10px] bg-indigo-100 dark:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400 rounded-full font-bold uppercase tracking-wider">Active</span>
                 </h2>
 
                 {intelLoading ? (
@@ -321,17 +322,25 @@ const Dashboard = () => {
                             ) : (
                                 <div className="space-y-2">
                                     {intelligence.reorderRecommendations.slice(0, 5).map((rec) => (
-                                        <div key={rec.productId} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700">
+                                        <div key={rec.productId} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800/50 hover:border-indigo-200 dark:hover:border-indigo-900/50 transition-colors">
                                             <div className="min-w-0">
                                                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{rec.name}</p>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">
-                                                    Stock: {rec.stock} • Incoming: {rec.restock.incomingStock} • Avg/day: {rec.forecast.averageDailyDemand}
+                                                    Stock: {rec.stock} • Avg/day: {rec.forecast.averageDailyDemand} {rec.forecast.aiPredictedDemand && <span className="text-indigo-500 font-semibold ml-1">→ AI Forecast: {rec.forecast.aiPredictedDemand}/day</span>}
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-xs px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
-                                                    Reorder {rec.restock.recommendedQuantity}
-                                                </span>
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-xs px-2 py-1 rounded-md bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40">
+                                                        Reorder {rec.restock.recommendedQuantity}
+                                                    </span>
+                                                    {rec.forecast.aiConfidence > 0.5 && (
+                                                        <span className="text-[9px] text-indigo-400 mt-1 flex items-center">
+                                                            <Sparkles className="w-2 h-2 mr-0.5" />
+                                                            High AI Confidence ({(rec.forecast.aiConfidence * 100).toFixed(0)}%)
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {rec.alert.level !== 'healthy' && (
                                                     <span className="text-[11px] px-2 py-1 rounded-md bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300 border border-amber-100 dark:border-amber-900/40">
                                                         {rec.alert.level}

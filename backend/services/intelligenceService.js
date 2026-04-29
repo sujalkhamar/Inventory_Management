@@ -1,6 +1,10 @@
 const Product = require('../models/Product');
 const Sale = require('../models/Sale');
 const PurchaseOrder = require('../models/PurchaseOrder');
+const axios = require('axios');
+const mongoose = require('mongoose');
+
+const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:8000';
 
 const roundTo = (value, decimals = 2) => {
     const factor = 10 ** decimals;
@@ -19,6 +23,19 @@ const getDateRange = (days) => {
     rangeStart.setDate(rangeStart.getDate() - (days - 1));
 
     return { today, rangeStart };
+};
+
+const getMLDemandPrediction = async (productId, historicalSales) => {
+    try {
+        const response = await axios.post(`${ML_SERVICE_URL}/predict`, {
+            product_id: productId.toString(),
+            historical_sales: historicalSales
+        });
+        return response.data;
+    } catch (error) {
+        console.error('ML Prediction Error:', error.message);
+        return null;
+    }
 };
 
 const getSalesMap = async (days) => {
@@ -81,11 +98,17 @@ const getOpenPurchaseOrdersMap = async () => {
     }, {});
 };
 
-const buildProductIntelligence = (product, salesInfo, openOrderInfo, lookbackDays) => {
+const buildProductIntelligence = async (product, salesInfo, openOrderInfo, lookbackDays, historicalSales = []) => {
     const totalSold = salesInfo?.totalQuantity || 0;
     const activeDays = salesInfo?.activeDays || 0;
     const averageDailyDemand = totalSold > 0 ? totalSold / lookbackDays : 0;
-    const activeDayDemand = activeDays > 0 ? totalSold / activeDays : 0;
+    
+    // AI Prediction
+    let aiPrediction = null;
+    if (historicalSales.length > 0) {
+        aiPrediction = await getMLDemandPrediction(product._id, historicalSales);
+    }
+
     const currentStock = product.stock || 0;
     const lowStockThreshold = product.lowStockThreshold || 0;
     const incomingStock = openOrderInfo?.quantity || 0;
@@ -124,9 +147,10 @@ const buildProductIntelligence = (product, salesInfo, openOrderInfo, lookbackDay
             lookbackDays,
             totalUnitsSold: totalSold,
             averageDailyDemand: roundTo(averageDailyDemand),
-            activeDayDemand: roundTo(activeDayDemand),
-            projected7DayDemand: Math.ceil(averageDailyDemand * 7),
-            projected14DayDemand: Math.ceil(averageDailyDemand * 14),
+            aiPredictedDemand: aiPrediction ? roundTo(aiPrediction.predicted_demand) : null,
+            aiConfidence: aiPrediction ? roundTo(aiPrediction.confidence_score) : 0,
+            projected7DayDemand: aiPrediction ? Math.ceil(aiPrediction.predicted_demand * 7) : Math.ceil(averageDailyDemand * 7),
+            projected14DayDemand: aiPrediction ? Math.ceil(aiPrediction.predicted_demand * 14) : Math.ceil(averageDailyDemand * 14),
             daysUntilStockout
         },
         alert: {
@@ -145,19 +169,45 @@ const buildProductIntelligence = (product, salesInfo, openOrderInfo, lookbackDay
     };
 };
 
-const getIntelligenceOverview = async (lookbackDays = 30) => {
-    const [products, salesMap, openOrdersMap] = await Promise.all([
-        Product.find().sort('name'),
-        getSalesMap(lookbackDays),
-        getOpenPurchaseOrdersMap()
+const getHistoricalSalesMap = async (days) => {
+    const { rangeStart } = getDateRange(days);
+    const sales = await Sale.aggregate([
+        { $match: { date: { $gte: rangeStart } } },
+        {
+            $group: {
+                _id: {
+                    product: '$product',
+                    date: { $dateToString: { format: '%Y-%m-%d', date: '$date' } }
+                },
+                quantity: { $sum: '$quantity' }
+            }
+        },
+        { $sort: { '_id.date': 1 } }
     ]);
 
-    const items = products.map((product) => buildProductIntelligence(
+    return sales.reduce((map, item) => {
+        const productId = item._id.product.toString();
+        if (!map[productId]) map[productId] = [];
+        map[productId].push(item.quantity);
+        return map;
+    }, {});
+};
+
+const getIntelligenceOverview = async (lookbackDays = 30) => {
+    const [products, salesMap, openOrdersMap, historicalSalesMap] = await Promise.all([
+        Product.find().sort('name'),
+        getSalesMap(lookbackDays),
+        getOpenPurchaseOrdersMap(),
+        getHistoricalSalesMap(lookbackDays)
+    ]);
+
+    const items = await Promise.all(products.map((product) => buildProductIntelligence(
         product,
         salesMap[product._id.toString()],
         openOrdersMap[product._id.toString()],
-        lookbackDays
-    ));
+        lookbackDays,
+        historicalSalesMap[product._id.toString()] || []
+    )));
 
     const flaggedProducts = items.filter((item) => item.alert.level !== 'healthy');
     const reorderRecommendations = items
@@ -180,21 +230,35 @@ const getIntelligenceOverview = async (lookbackDays = 30) => {
 };
 
 const getProductIntelligence = async (productId, lookbackDays = 30) => {
-    const [product, salesMap, openOrdersMap] = await Promise.all([
+    const { rangeStart } = getDateRange(lookbackDays);
+    const [product, salesMap, openOrdersMap, historicalSales] = await Promise.all([
         Product.findById(productId),
         getSalesMap(lookbackDays),
-        getOpenPurchaseOrdersMap()
+        getOpenPurchaseOrdersMap(),
+        Sale.aggregate([
+            { $match: { product: new mongoose.Types.ObjectId(productId), date: { $gte: rangeStart } } },
+            {
+                $group: {
+                    _id: { $dateToString: { format: '%Y-%m-%d', date: '$date' } },
+                    quantity: { $sum: '$quantity' }
+                }
+            },
+            { $sort: { _id: 1 } }
+        ])
     ]);
 
     if (!product) {
         return null;
     }
 
+    const salesList = historicalSales.map(s => s.quantity);
+
     return buildProductIntelligence(
         product,
         salesMap[product._id.toString()],
         openOrdersMap[product._id.toString()],
-        lookbackDays
+        lookbackDays,
+        salesList
     );
 };
 
