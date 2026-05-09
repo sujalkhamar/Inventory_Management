@@ -33,7 +33,7 @@ const getMLDemandPrediction = async (productId, historicalSales) => {
         });
         return response.data;
     } catch (error) {
-        console.error('ML Prediction Error:', error.message);
+        console.error('ML Prediction Error:', error.code || error.message || 'Unknown Error');
         return null;
     }
 };
